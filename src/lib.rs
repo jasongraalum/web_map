@@ -93,10 +93,11 @@ impl WebMap {
         return host_list;
     }
 
+    /*
     pub fn add_node(&mut self, hostname: &str, node_url: &Url) -> u64 {
 
         // Add new WebReference as a reference
-        match self.process_url(&hostname, &node_url) {
+        match self.process_path(&hostname, &node_url) {
             (StatusCode::Ok, Some(res), Some(refs), Some(hash)) => {
                 let mut ref_urls : Vec<Url> = Vec::new();
                 let mut res_urls : Vec<Url> = Vec::new();
@@ -136,41 +137,78 @@ impl WebMap {
             _ => 0,
         }
     }
+    */
 
-    pub fn process_url(&mut self, hostname : &str, url: &Url) -> (StatusCode, Option<Vec<String>>, Option<Vec<String>>, Option<u64>)
+    pub fn process_path(&mut self, hostname : &str, path: &str) -> (StatusCode, Option<Vec<String>>, Option<Vec<String>>, Option<u64>)
     {
+        let mut full_url : Url;
         // Generate new reference hash for hostname/url combination
+        if let Ok(base_url) = Url::parse(hostname) {
+            if let Ok(path_url) = Url::parse(path) {
+                if path_url.cannot_be_a_base()
+                    {
+                        match base_url.join(path) {
+                            Ok(u) => full_url = u,
+                            Err(_) => return (StatusCode::BadRequest, None, None, None),
+                        };
+                    }
+                    else {
+                        full_url = path_url;
+                    }
+            }
+                else {
+                    return (StatusCode::BadRequest, None, None, None)
+                }
+
+        }
+        else {
+            return (StatusCode::BadRequest, None, None, None)
+        };
+
+
         let mut hasher = DefaultHasher::new();
-        url.as_str().hash(&mut hasher);
-        hostname.hash(&mut hasher);
+        full_url.to_string().hash(&mut hasher);
         let hash_val = hasher.finish();
 
         // Check if WebMap references HashMap contains this hash
         if self.references.contains_key(&hash_val) { return (StatusCode::ImATeapot, None, None, None) };
 
-        let mut sink = UrlTokenParser {
-            in_char_run: false,
-            resources : Vec::new(),
-            references : Vec::new(),
-        };
 
-        let mut resp = reqwest::get(url.clone()).unwrap();
-        let mut resp_text = resp.text().unwrap();
+        let client = Client::new();
+        if let Ok(mut resp) = client.get(full_url).send() {
 
-        let mut chunk = ByteTendril::new();
-        chunk.try_push_bytes(resp_text.as_bytes()).unwrap();
+            if let Ok(resp_text) = resp.text() {
+                let mut sink = UrlTokenParser {
+                    in_char_run: false,
+                    resources : Vec::new(),
+                    references : Vec::new(),
+                };
 
-        let mut input = BufferQueue::new();
-        input.push_back(chunk.try_reinterpret().unwrap());
+                let mut chunk = ByteTendril::new();
+                chunk.try_push_bytes(resp_text.as_bytes()).unwrap();
 
-        let mut tok = Tokenizer::new(sink, TokenizerOpts {
-            profile: true,
-            .. Default::default()
-        });
+                let mut input = BufferQueue::new();
+                input.push_back(chunk.try_reinterpret().unwrap());
 
-        let _ = tok.feed(&mut input);
+                let mut tok = Tokenizer::new(sink, TokenizerOpts {
+                    profile: true,
+                    .. Default::default()
+                });
 
-        (resp.status(), Some(tok.sink.references), Some(tok.sink.resources), Some(hash_val))
+                let _ = tok.feed(&mut input);
+
+                (resp.status(), Some(tok.sink.references), Some(tok.sink.resources), Some(hash_val))
+            }
+            else {
+                return (StatusCode::BadRequest, None, None, None)
+            }
+
+
+        }
+        else {
+            (StatusCode::BadRequest, None, None, None)
+        }
+
     }
 
     pub fn hash_host_and_url(hostname : &str, url_name: &str) -> u64
