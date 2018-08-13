@@ -39,16 +39,16 @@ use self::tokenizer::UrlTokenParser;
 
 use url::{Url,Host};
 
-use reqwest::StatusCode;
+use reqwest::{StatusCode,Client};
 
 use html5ever::tokenizer::BufferQueue;
 use html5ever::tokenizer::Tokenizer;
 use html5ever::tokenizer::TokenizerOpts;
 use html5ever::tendril::*;
 
-#[derive(Clone,Eq,PartialEq)]
+#[derive(Debug, Clone,Eq,PartialEq)]
 pub struct WebMap {
-    hosts: Vec<(String,u64)>,
+    hosts: Vec<(String, StatusCode, Url)>,
     resources : HashMap<u64, WebResource>,
     references : HashMap<u64, WebReference>,
     ref_tag_attr_pairs: Vec<(String, String)>,
@@ -69,13 +69,16 @@ impl WebMap {
             Ok(url) => {
                 let mut hostname_string = String::new();
                 hostname_string.push_str(hostname);
-                let node_hash = self.add_node(&hostname, &url);
-                if node_hash > 0 {
-                    self.hosts.push((hostname_string, node_hash));
 
-                    true
+                let client = Client::new();
+                let result_resp = client.get(url).send();
+                match result_resp {
+                    Ok(result) => {
+                        self.hosts.push((hostname_string, result.status(), result.url().clone()));
+                        true
+                    }
+                    Err(e) => false
                 }
-                else { false }
             },
         }
     }
@@ -83,7 +86,7 @@ impl WebMap {
     pub fn list_hosts(&self) -> Vec<String>
     {
         let mut host_list: Vec<String> = Vec::new();
-        for &(ref h, ref n) in &self.hosts {
+        for &(ref h, ref status, ref url ) in &self.hosts {
             host_list.push(h.clone());
         }
 
@@ -203,7 +206,7 @@ impl WebMap {
     }
 }
 
-#[derive(Clone,Eq,PartialEq)]
+#[derive(Debug, Clone,Eq,PartialEq)]
 pub struct WebReference {
     url: Url,
     status: Option<StatusCode>,
@@ -235,7 +238,7 @@ impl WebReference {
     }
 }
 
-#[derive(Clone,PartialEq, Eq)]
+#[derive(Debug, Clone,PartialEq, Eq)]
 struct WebResource {
     url: Url,
     resource_type: String,
@@ -282,3 +285,18 @@ fn test_local()
             assert!(false);
         }
 }
+
+#[test]
+fn test_image_grab()
+{
+    let mut map = WebMap::new();
+    map.add_host("https://web.cecs.pdx.edu/~jgraalum");
+    for refs in map.references {
+        println!("{:?}", refs);
+    }
+    for res in map.resources {
+        println!("{:?}", res);
+    }
+    assert!(false);
+}
+
