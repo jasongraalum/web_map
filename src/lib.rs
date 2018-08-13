@@ -1,29 +1,50 @@
 // Copyright (c) 2018 Jason Graalum
-// // // web_map library
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+// associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// web_map library
 //
 // Defines a structure to reflect the hierarchical traits of a web site
 //
 // Starts at a root node
 // Includes References - <a hrefs ...> for now
-// Includes Data Sources - <src img ...> for now
+// Includes Resources - <src img ...> for now
+
+extern crate url;
+extern crate reqwest;
+extern crate html5ever;
 
 pub mod tokenizer;
 
 use std::io;
 use std::default::Default;
-
-use html5ever::tokenizer::{TokenSink, Tokenizer, Token, TokenizerOpts, ParseError, TokenSinkResult};
-use html5ever::tokenizer::{CharacterTokens, NullCharacterToken, TagToken, StartTag, EndTag};
-use html5ever::tokenizer::BufferQueue;
-use html5ever::tendril::*;
-
-use url::{self, Url,Host};
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use reqwest::{self,StatusCode};
 
-use web_map::tokenizer::UrlTokenParser;
+use self::tokenizer::UrlTokenParser;
+
+use url::{Url,Host};
+
+use reqwest::StatusCode;
+
+use html5ever::tokenizer::BufferQueue;
+use html5ever::tokenizer::Tokenizer;
+use html5ever::tokenizer::TokenizerOpts;
+use html5ever::tendril::*;
 
 #[derive(Clone,Eq,PartialEq)]
 pub struct WebMap {
@@ -148,6 +169,7 @@ impl WebMap {
 
         (resp.status(), Some(tok.sink.references), Some(tok.sink.resources), Some(hash_val))
     }
+
     pub fn hash_host_and_url(hostname : &str, url_name: &str) -> u64
     {
         let mut hasher = DefaultHasher::new();
@@ -235,6 +257,22 @@ fn webmap_add_new_host()
     let mut map = WebMap::new();
     if map.add_host("https://www.pdx.edu") == true  &&
         map.add_host("https://www.google.com") == true  {
+        for h in map.list_hosts() {
+            println!("Host : {:?}", h);
+        }
+        assert!(true);
+    }
+        else {
+            assert!(false);
+        }
+}
+
+#[test]
+fn test_local()
+{
+    let mut map = WebMap::new();
+    if map.add_host("file://User/jasongraalum") == true
+        {
         for h in map.list_hosts() {
             println!("Host : {:?}", h);
         }
