@@ -33,8 +33,8 @@ extern crate html5ever;
 use std::io;
 use std::default::Default;
 
-use html5ever::tokenizer::{TokenSink, Tokenizer, Token, TokenizerOpts, ParseError, TokenSinkResult};
-use html5ever::tokenizer::{CharacterTokens, NullCharacterToken, TagToken, StartTag, EndTag};
+use html5ever::tokenizer::{ParseError, Token, TokenSink, TokenSinkResult, Tokenizer, TokenizerOpts};
+use html5ever::tokenizer::{CharacterTokens, EndTag, NullCharacterToken, StartTag, TagToken};
 use html5ever::tokenizer::BufferQueue;
 use html5ever::tendril::*;
 
@@ -43,8 +43,8 @@ use reqwest;
 #[derive(Clone)]
 pub struct UrlTokenParser {
     pub in_char_run: bool,
-    pub resources : Vec<String>,
-    pub references : Vec<String>,
+    pub resources: Vec<String>,
+    pub references: Vec<String>,
 }
 
 impl TokenSink for UrlTokenParser {
@@ -54,11 +54,19 @@ impl TokenSink for UrlTokenParser {
         match token {
             TagToken(tag) => {
                 for attr in tag.attrs.iter() {
-                    if attr.name.local == "href".get(0..).unwrap().to_string(){
+                    if attr.name.local == "href".get(0..).unwrap().to_string() {
+                        self.references
+                            .push(attr.value.get(0..).unwrap().to_string());
+                    }
+                    /*
+                    // TODO: Need to add ability to find permanently moved resources
+                    if attr.name.local == "url".get(0..).unwrap().to_string(){
                         self.references.push(attr.value.get(0..).unwrap().to_string());
                     }
+                    */
                     if attr.name.local.get(0..).unwrap().to_string() == "src" {
-                        self.resources.push(attr.value.get(0..).unwrap().to_string());
+                        self.resources
+                            .push(attr.value.get(0..).unwrap().to_string());
                     }
                 }
             }
@@ -72,12 +80,15 @@ impl TokenSink for UrlTokenParser {
 
 #[test]
 fn test_tokenizer() {
-    let mut sink = UrlTokenParser {
+    let sink = UrlTokenParser {
         in_char_run: false,
-        resources : Vec::new(),
-        references : Vec::new(),
+        resources: Vec::new(),
+        references: Vec::new(),
     };
-    let mut resp_text = reqwest::get("https://www.pdx.edu").unwrap().text().unwrap();
+    let mut resp_text = reqwest::get("https://web.cecs.pdx.edu/~jgraalum")
+        .unwrap()
+        .text()
+        .unwrap();
 
     let mut chunk = ByteTendril::new();
     chunk.try_push_bytes(resp_text.as_bytes()).unwrap();
@@ -85,18 +96,20 @@ fn test_tokenizer() {
     let mut input = BufferQueue::new();
     input.push_back(chunk.try_reinterpret().unwrap());
 
-    let mut tok = Tokenizer::new(sink, TokenizerOpts {
-        profile: true,
-        .. Default::default()
-    });
+    let mut tok = Tokenizer::new(
+        sink,
+        TokenizerOpts {
+            profile: true,
+            ..Default::default()
+        },
+    );
 
     let _ = tok.feed(&mut input);
     assert!(input.is_empty());
 
     tok.end();
     println!("References");
-    println!("{:?}",tok.sink.references);
+    println!("{:?}", tok.sink.references);
     println!("Resources");
-    println!("{:?}",tok.sink.resources);
+    println!("{:?}", tok.sink.resources);
 }
-
