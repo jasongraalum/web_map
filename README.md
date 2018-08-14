@@ -1,37 +1,45 @@
-## Welcome to GitHub Pages
+## Web Mapping Crate
 
-You can use the [editor on GitHub](https://github.com/jasongraalum/web_map/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+web_map
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Copyright 2018 Jason Graalum
+Data structures and methods to hierachically map a web site resulting in lists of resources and references.
 
-### Markdown
+* This started out as a Class Project for CS561 Open Source Software Development at Portland State University
+* I am continuing it as I would find this tool personally useful.
+* Community Contributions are welcome and encouraged!
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Technical Targets
+1. Provide data structures to logically store relative details about a web page
+1. Include support for hierarchy of pages - including self references
+1. Support the various GET/POST methods and Status Codes
+1. Include support for authenication data - securely
 
-```markdown
-Syntax highlighted code block
+## Community Targets
+1. Provide an easy to use and complete crate for mapping a web site
+2. Encourage community contributions, feedback and discussions
 
-# Header 1
-## Header 2
-### Header 3
+# License
 
-- Bulleted
-- List
+MIT License http://opensource.org/licenses/MIT
 
-1. Numbered
-2. List
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-**Bold** and _Italic_ and `Code` text
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-[Link](url) and ![Image](src)
-```
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/jasongraalum/web_map/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the MIT license, shall be dual licensed as above, without any additional terms or conditions.
